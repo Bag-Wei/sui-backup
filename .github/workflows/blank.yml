@@ -15,7 +15,6 @@ permissions:
 
 env:
   SOURCE_IMAGE: docker.io/alireza7/s-ui:latest
-  IMAGE_NAME: ghcr.io/${{ github.repository }}
 
 jobs:
   sync:
@@ -28,16 +27,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y skopeo
 
+      - name: 设置小写镜像名
+        run: |
+          echo "IMAGE_NAME=ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/sui-backup" >> $GITHUB_ENV
+
       - name: 同步版本镜像
         run: |
           skopeo copy --all \
             --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
             docker://${{ env.SOURCE_IMAGE }} \
-            docker://${{ env.IMAGE_NAME }}:${{ inputs.version }}
+            docker://${IMAGE_NAME}:${{ inputs.version }}
 
       - name: 同步 latest 镜像
         run: |
           skopeo copy --all \
             --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
             docker://${{ env.SOURCE_IMAGE }} \
-            docker://${{ env.IMAGE_NAME }}:latest
+            docker://${IMAGE_NAME}:latest
